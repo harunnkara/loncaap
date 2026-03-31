@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f0f0f">
+<title>Lonca</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,200;0,300;1,200;1,300&family=Geist:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'><path d='M9 1L10.4 6.8L16.5 9L10.4 11.2L9 17L7.6 11.2L1.5 9L7.6 6.8Z' fill='%238a6f3f'/></svg>">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#faf9f7;--ink:#0f0f0f;--ink2:#6b6b6b;--ink3:#b0aba3;
+  --gold:#8a6f3f;--gold-l:#c4a06a;--gold-bg:rgba(138,111,63,.08);
+  --border:#e8e4de;--surf:#f4f1ec;--card:#fff;
+  --dark:#0f0f0f;--err:#c0392b;
+  --nav-h:64px;--top-h:56px;
+  --r:14px;
+  --ease:cubic-bezier(0.16,1,0.3,1);
+}
+html.dm{
+  --bg:#111110;--ink:#f0ece4;--ink2:#8a857d;--ink3:#4a4740;
+  --border:#2a2825;--surf:#1a1917;--card:#1a1917;
+  --gold:#c4a06a;--gold-l:#d4b07a;--gold-bg:rgba(196,160,106,.08);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink)}
+body{font-family:'Geist',sans-serif;font-weight:300;font-size:15px}
+
+/* ── Safe area ── */
+.safe-top{height:env(safe-area-inset-top,0)}
+.safe-bot{height:env(safe-area-inset-bottom,0)}
+
+/* ── Screens ── */
+.screen{
+  position:fixed;inset:0;background:var(--bg);
+  display:none;flex-direction:column;
+  transition:transform .32s var(--ease),opacity .32s var(--ease);
+  will-change:transform;
+}
+.screen.active{display:flex}
+.screen.slide-in{animation:slideIn .32s var(--ease) both}
+.screen.slide-out{animation:slideOut .24s var(--ease) both}
+.screen.slide-up{animation:slideUp .36s var(--ease) both}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+@keyframes slideOut{from{transform:translateX(0)}to{transform:translateX(-40%)}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Top bar ── */
+.top-bar{
+  height:var(--top-h);display:flex;align-items:center;
+  padding:0 16px;gap:12px;
+  background:rgba(250,249,247,0.95);
+  border-bottom:1px solid var(--border);
+  position:relative;z-index:10;flex-shrink:0;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+html.dm .top-bar{background:rgba(17,17,16,0.95)}
+.top-bar-title{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:200;flex:1;text-align:center}
+.top-bar-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  background:none;border:none;color:var(--ink);cursor:pointer;border-radius:8px;flex-shrink:0}
+.top-bar-btn:active{background:var(--surf)}
+.top-bar-logo{font-family:'Fraunces',serif;font-size:1.25rem;font-weight:200;color:var(--ink);
+  display:flex;align-items:center;gap:8px}
+.top-bar-logo svg{flex-shrink:0}
+
+/* ── Scroll area ── */
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{display:none}
+.pad{padding:16px}
+
+/* ── Bottom nav ── */
+.bottom-nav{
+  height:var(--nav-h);display:flex;align-items:stretch;
+  background:rgba(250,249,247,0.95);border-top:1px solid var(--border);
+  flex-shrink:0;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  position:relative;z-index:10;
+}
+html.dm .bottom-nav{background:rgba(17,17,16,0.95)}
+.nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;background:none;border:none;cursor:pointer;padding:8px 4px;
+  color:var(--ink3);transition:color .18s;font-family:'Geist',sans-serif}
+.nav-tab.active{color:var(--gold)}
+.nav-tab svg{width:22px;height:22px;flex-shrink:0}
+.nav-tab span{font-size:10px;letter-spacing:.04em;font-weight:400}
+.nav-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);margin-top:2px}
+
+/* ── Cards ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.card+.card{margin-top:10px}
+.card-pad{padding:16px}
+
+/* ── Expert card ── */
+.expert-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:16px;margin-bottom:10px;position:relative;overflow:hidden}
+.expert-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 70%,rgba(138,111,63,.04));pointer-events:none}
+.expert-tag{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.expert-name{font-family:'Fraunces',serif;font-size:1.15rem;font-weight:200;color:var(--ink);margin-bottom:4px}
+.expert-verified{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink3);margin-bottom:10px}
+.expert-bio{font-size:13px;color:var(--ink2);line-height:1.6;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.expert-footer{display:flex;align-items:center;justify-content:space-between}
+.expert-slot{font-size:12px;color:var(--ink2)}
+.expert-price{font-family:'Fraunces',serif;font-size:1rem;font-weight:200;color:var(--gold)}
+.expert-actions{display:flex;gap:8px;margin-top:12px}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  font-family:'Geist',sans-serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+  padding:0 16px;height:40px;cursor:pointer;border:1px solid var(--border);border-radius:8px;
+  background:transparent;color:var(--ink);transition:all .18s;white-space:nowrap;font-weight:400}
+.btn:active{transform:scale(0.96)}
+.btn-dark{background:var(--dark);color:var(--bg);border-color:var(--dark)}
+.btn-dark:active{background:var(--gold);border-color:var(--gold)}
+.btn-gold{background:var(--gold);color:var(--bg);border-color:var(--gold)}
+.btn-outline{color:var(--ink2)}
+.btn-sm{height:34px;font-size:11px;padding:0 12px}
+.btn-full{width:100%;border-radius:10px;height:48px;font-size:13px}
+.btn-round{width:40px;height:40px;padding:0;border-radius:50%;flex-shrink:0}
+
+/* ── Input ── */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink3);margin-bottom:6px}
+.field input,.field textarea,.field select{
+  width:100%;padding:12px 14px;background:var(--surf);border:1.5px solid var(--border);
+  border-radius:10px;font-family:'Geist',sans-serif;font-size:15px;color:var(--ink);
+  outline:none;transition:border-color .18s;-webkit-appearance:none}
+.field input:focus,.field textarea:focus{border-color:var(--gold)}
+.field textarea{resize:none;min-height:80px;line-height:1.6}
+
+/* ── Avatar ── */
+.avatar{border-radius:50%;background:var(--gold-l);display:flex;align-items:center;justify-content:center;
+  font-family:'Geist',sans-serif;font-weight:500;color:var(--dark);flex-shrink:0;letter-spacing:.04em}
+
+/* ── Badge ── */
+.badge{font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border-radius:4px;font-weight:400}
+.badge-green{background:rgba(34,197,94,.1);color:#15803d}
+.badge-gold{background:var(--gold-bg);color:var(--gold)}
+.badge-grey{background:var(--surf);color:var(--ink3)}
+
+/* ── Search bar ── */
+.search-wrap{padding:12px 16px 0;background:var(--bg)}
+.search-box{display:flex;align-items:center;gap:10px;background:var(--surf);
+  border:1.5px solid var(--border);border-radius:12px;padding:10px 14px}
+.search-box svg{color:var(--ink3);flex-shrink:0;width:18px;height:18px}
+.search-box input{flex:1;background:none;border:none;outline:none;font-family:'Geist',sans-serif;
+  font-size:15px;color:var(--ink)}
+.search-box input::placeholder{color:var(--ink3)}
+
+/* ── Section header ── */
+.sec-head{display:flex;align-items:center;justify-content:space-between;padding:20px 16px 10px}
+.sec-head h3{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:200;color:var(--ink)}
+.sec-head-action{font-size:12px;color:var(--gold);letter-spacing:.06em;background:none;border:none;cursor:pointer;font-family:'Geist',sans-serif}
+
+/* ── Appointment card ── */
+.appt-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:14px;margin-bottom:10px;display:flex;flex-direction:column;gap:10px}
+.appt-header{display:flex;align-items:center;gap:10px}
+.appt-meta{font-size:12px;color:var(--ink2)}
+.appt-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--ink)}
+
+/* ── KPI cards ── */
+.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px}
+.kpi-label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.kpi-value{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:200;color:var(--ink);line-height:1}
+.kpi-desc{font-size:11px;color:var(--ink3);margin-top:4px}
+
+/* ── Toast ── */
+#toast{
+  position:fixed;bottom:calc(var(--nav-h) + 16px);left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--dark);color:var(--bg);padding:10px 18px;border-radius:24px;
+  font-size:13px;z-index:9999;opacity:0;transition:all .3s var(--ease);
+  white-space:nowrap;pointer-events:none;max-width:90vw;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.gold{background:var(--gold);color:#fff}
+
+/* ── Bottom sheet ── */
+.sheet-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;
+  display:none;align-items:flex-end;
+  animation:fadeOverlay .25s ease both;
+}
+.sheet-overlay.open{display:flex}
+@keyframes fadeOverlay{from{background:rgba(0,0,0,0)}to{background:rgba(0,0,0,.4)}}
+.sheet{
+  background:var(--bg);border-radius:20px 20px 0 0;width:100%;
+  max-height:90vh;overflow-y:auto;padding:0 0 env(safe-area-inset-bottom,16px);
+  animation:sheetUp .32s var(--ease) both;
+}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0}
+.sheet-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sheet-head h3{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:200}
+.sheet-close{width:30px;height:30px;background:var(--surf);border:none;border-radius:50%;cursor:pointer;font-size:16px;color:var(--ink3);display:flex;align-items:center;justify-content:center}
+.sheet-body{padding:20px}
+
+/* ── Tab bar ── */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0}
+.tab{flex:1;padding:12px 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+  font-family:'Geist',sans-serif;background:none;border:none;color:var(--ink3);cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .18s}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* ── Match wizard ── */
+.wizard-step{animation:fadeIn .3s var(--ease) both}
+.wizard-chip{display:inline-flex;align-items:center;gap:5px;font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--gold);background:var(--gold-bg);padding:4px 10px;
+  border-radius:20px;margin-bottom:10px}
+.match-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:16px;margin-bottom:10px;position:relative}
+.match-ribbon{font-size:9px;letter-spacing:.14em;text-transform:uppercase;padding:3px 8px;
+  border-radius:3px;display:inline-block;margin-bottom:8px}
+.mr-best{background:linear-gradient(135deg,var(--gold),var(--gold-l));color:#fff}
+.mr-strong{background:var(--surf);color:var(--gold)}
+.mr-good{background:var(--surf);color:var(--ink2)}
+.match-pct{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:200;color:var(--gold);line-height:1;margin:6px 0 4px}
+.match-why{font-size:12px;color:var(--ink2);line-height:1.6;font-style:italic}
+
+/* ── Session screen ── */
+.session-bg{background:#0a0908;flex:1;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.session-video{flex:1;display:flex;align-items:center;justify-content:center;position:relative}
+.session-self{position:absolute;bottom:12px;right:12px;width:80px;height:100px;
+  background:#1a1917;border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,.1)}
+.session-controls{display:flex;align-items:center;justify-content:center;gap:20px;
+  padding:20px;background:rgba(0,0,0,.6)}
+.ctrl-btn{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .18s}
+.ctrl-btn:active{transform:scale(0.9)}
+.ctrl-btn.muted{background:#333}
+.ctrl-btn.normal{background:rgba(255,255,255,.15)}
+.ctrl-btn.end-call{background:#c0392b}
+.ctrl-btn svg{width:22px;height:22px;color:#fff}
+.session-time{font-family:'Fraunces',serif;font-size:2rem;font-weight:200;color:#fff}
+.session-name{font-size:13px;color:rgba(255,255,255,.6);margin-top:4px}
+
+/* ── AI advice banner ── */
+.ai-banner{background:linear-gradient(135deg,var(--dark) 0%,#1a1209 100%);
+  border-radius:14px;padding:16px;margin:0 16px 16px;position:relative;overflow:hidden}
+.ai-banner::before{content:'';position:absolute;top:-20px;right:-20px;
+  width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,rgba(196,160,106,.2),transparent)}
+.ai-banner-tag{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-l);margin-bottom:6px}
+.ai-banner-title{font-family:'Fraunces',serif;font-size:1rem;font-weight:200;color:#f0ece4;margin-bottom:4px}
+.ai-banner-body{font-size:12px;color:rgba(240,236,228,.6);line-height:1.6}
+.ai-banner-action{display:inline-flex;align-items:center;gap:4px;margin-top:10px;
+  font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-l);
+  background:none;border:none;cursor:pointer;font-family:'Geist',sans-serif;padding:0}
+
+/* ── Profile ── */
+.profile-header{background:linear-gradient(180deg,var(--surf) 0%,var(--bg) 100%);
+  padding:32px 16px 20px;text-align:center}
+.profile-name{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:200;color:var(--ink);margin-top:12px}
+.profile-role{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-top:4px}
+.setting-row{display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;border-bottom:1px solid var(--border);background:var(--card)}
+.setting-row:first-child{border-top:1px solid var(--border)}
+.setting-label{font-size:14px;color:var(--ink)}
+.setting-val{font-size:13px;color:var(--ink3)}
+.setting-chevron{color:var(--ink3);opacity:.5}
+
+/* ── Spinner ── */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:28px;height:28px;border:2px solid var(--border);
+  border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:40px auto}
+
+/* ── Welcome screen ── */
+.welcome-bg{background:var(--dark);flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:40px 24px;text-align:center;position:relative;overflow:hidden}
+.welcome-bg::before{content:'';position:absolute;top:-30%;left:-30%;
+  width:80%;height:80%;border-radius:50%;
+  background:radial-gradient(circle,rgba(138,111,63,.12),transparent 70%);pointer-events:none}
+.welcome-bg::after{content:'';position:absolute;bottom:-20%;right:-20%;
+  width:60%;height:60%;border-radius:50%;
+  background:radial-gradient(circle,rgba(138,111,63,.08),transparent 70%);pointer-events:none}
+.welcome-star{width:56px;height:56px;margin-bottom:24px}
+.welcome-title{font-family:'Fraunces',serif;font-size:2.4rem;font-weight:200;color:#f0ece4;
+  line-height:1.2;margin-bottom:12px}
+.welcome-sub{font-size:14px;color:rgba(240,236,228,.5);line-height:1.7;max-width:280px;margin-bottom:40px}
+.welcome-actions{display:flex;flex-direction:column;gap:10px;width:100%}
+
+/* ── Auth ── */
+.auth-wrap{padding:24px 20px}
+.auth-title{font-family:'Fraunces',serif;font-size:1.8rem;font-weight:200;color:var(--ink);margin-bottom:6px}
+.auth-sub{font-size:13px;color:var(--ink2);margin-bottom:28px;line-height:1.6}
+.auth-switch{text-align:center;margin-top:20px;font-size:13px;color:var(--ink3)}
+.auth-switch span{color:var(--gold);cursor:pointer}
+.err-msg{color:var(--err);font-size:13px;margin-bottom:12px;display:none}
+.role-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:24px}
+.role-tab{padding:8px 4px;border:1.5px solid var(--border);border-radius:8px;
+  font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);
+  background:none;cursor:pointer;font-family:'Geist',sans-serif;transition:all .18s;text-align:center}
+.role-tab.active{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+
+/* ── Concierge ── */
+.conc-orb{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1a1209,#2a1e0f);
+  border:1px solid rgba(196,160,106,.3);display:flex;align-items:center;justify-content:center;
+  margin:24px auto;position:relative}
+.conc-orb::before{content:'';position:absolute;inset:-8px;border-radius:50%;
+  border:1px solid rgba(196,160,106,.12);animation:pulse 2s ease-in-out infinite}
+.conc-orb::after{content:'';position:absolute;inset:-16px;border-radius:50%;
+  border:1px solid rgba(196,160,106,.06);animation:pulse 2s ease-in-out infinite .5s}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.05)}}
+.conc-orb svg{width:28px;height:28px;color:var(--gold-l)}
+.thinking-dots{display:flex;gap:6px;justify-content:center;padding:20px}
+.thinking-dots span{width:8px;height:8px;border-radius:50%;background:var(--gold);
+  animation:bounce .8s ease-in-out infinite}
+.thinking-dots span:nth-child(2){animation-delay:.15s}
+.thinking-dots span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* ── DM toggle ── */
+.dm-toggle{width:40px;height:22px;border-radius:11px;background:var(--surf);border:1.5px solid var(--border);
+  position:relative;cursor:pointer;transition:background .25s;flex-shrink:0}
+.dm-toggle.on{background:var(--gold);border-color:var(--gold)}
+.dm-toggle::after{content:'';width:16px;height:16px;border-radius:50%;background:#fff;
+  position:absolute;top:1px;left:1px;transition:transform .25s var(--ease)}
+.dm-toggle.on::after{transform:translateX(18px)}
+
+/* ── Notification dot ── */
+.notif-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;
+  background:var(--err);border-radius:50%;border:2px solid var(--bg)}
+
+/* ── Expert profile sheet ── */
+.ep-avatar{width:64px;height:64px;font-size:1.3rem;margin-bottom:12px}
+.ep-name{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:200;color:var(--ink)}
+.ep-field{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-top:4px}
+.ep-bio{font-size:14px;color:var(--ink2);line-height:1.7;margin-top:12px}
+.slot-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.slot-btn{padding:10px;border:1.5px solid var(--border);border-radius:10px;
+  text-align:center;background:var(--card);cursor:pointer;transition:all .18s}
+.slot-btn:active{border-color:var(--gold);background:var(--gold-bg)}
+.slot-btn.booked{opacity:.4;cursor:not-allowed}
+.slot-day{font-size:11px;color:var(--ink3);margin-bottom:2px}
+.slot-time{font-size:13px;color:var(--ink);font-weight:400}
+
+/* ── Haptic feedback simulation ── */
+@keyframes haptic{0%,100%{transform:scale(1)}50%{transform:scale(0.97)}}
+</style>
+</head>
+<body>
+
+<!-- ════════ DATA ════════ -->
+<script>
+const EXPERTS = [
+  {name:'Prof. Dr. Mustafa Boz', field:'Nöroşirürji', initials:'MB',
+   bio:'30 yıl klinik deneyim. 2.000+ başarılı operasyon. 80+ uluslararası yayın.',
+   time:'Per · 13:00', price:'₺3.000', rating:4.9, sessions:312,
+   slots:[{day:'Per',time:'13:00',booked:true},{day:'Per',time:'14:00',booked:false},{day:'Cum',time:'10:00',booked:false}]},
+  {name:'Ayşe Yılmaz, CFA', field:'Finans & Yatırım', initials:'AY',
+   bio:'Eski Goldman Sachs. Kurumsal portföy yönetimi otoritesi. 15 yıl deneyim.',
+   time:'Sal · 10:00', price:'₺1.800', rating:4.8, sessions:241,
+   slots:[{day:'Sal',time:'10:00',booked:false},{day:'Çar',time:'14:00',booked:false}]},
+  {name:'Dr. Emre Koç', field:'Yapay Zeka & Teknoloji', initials:'EK',
+   bio:'MIT AI Lab araştırmacısı. 3 unicorn startupın teknik kurucu ortağı.',
+   time:'Cum · 15:00', price:'₺2.200', rating:4.9, sessions:189,
+   slots:[{day:'Cum',time:'15:00',booked:false},{day:'Pzt',time:'11:00',booked:false}]},
+  {name:'Av. Deniz Arslan', field:'Kurumsal Hukuk', initials:'DA',
+   bio:'20 yıl M&A ve uluslararası kurumsal hukuk deneyimi. 500+ dava.',
+   time:'Çar · 14:00', price:'₺2.500', rating:4.7, sessions:178,
+   slots:[{day:'Çar',time:'14:00',booked:false},{day:'Per',time:'16:00',booked:false}]},
+  {name:'Prof. Canan Şen', field:'Klinik Psikoloji', initials:'CŞ',
+   bio:'BDT uzmanı. Travma ve anksiyete alanlarında 18 yıl klinik deneyim.',
+   time:'Pzt · 16:00', price:'₺1.600', rating:4.8, sessions:290,
+   slots:[{day:'Pzt',time:'16:00',booked:false},{day:'Sal',time:'11:00',booked:false}]},
+];
+
+const APPOINTMENTS = JSON.parse(localStorage.getItem('lonca_app_appts') || '[]').length
+  ? JSON.parse(localStorage.getItem('lonca_app_appts'))
+  : [
+    {expert:'Prof. Dr. Mustafa Boz', field:'Nöroşirürji', initials:'MB',
+     date:'6 Mar 2025', time:'13:00', price:'₺3.000', status:'upcoming'},
+    {expert:'Dr. Emre Koç', field:'Yapay Zeka & Teknoloji', initials:'EK',
+     date:'21 Şub 2025', time:'15:00', price:'₺2.200', status:'completed'},
+  ];
+
+const USERS = {
+  client: {phone:'05555555555',pass:'123456',name:'Ahmet Yıldız',role:'client',initials:'AY'},
+  expert: {phone:'05555555555',pass:'123456',name:'Prof. Dr. Mustafa Boz',role:'expert',initials:'MB',field:'Nöroşirürji'},
+};
+
+let currentUser = null;
+let loginRole   = 'client';
+let activeSheet = null;
+let sessionTimer = null;
+let sessionSecs  = 0;
+let _selectedExpert = null;
+
+// Restore session
+try{
+  const s = localStorage.getItem('lonca_app_me');
+  if(s) currentUser = JSON.parse(s);
+}catch(e){}
+</script>
+
+<!-- ════════ SCREENS ════════ -->
+
+<!-- 1. Welcome -->
+<div class="screen" id="s-welcome">
+  <div class="welcome-bg">
+    <svg class="welcome-star" viewBox="0 0 56 56" fill="none">
+      <path d="M28 4L32.6 20.4L49 24L32.6 27.6L28 44L23.4 27.6L7 24L23.4 20.4Z" fill="#c4a06a"/>
+      <path d="M28 4L32.6 20.4L49 24L32.6 27.6L28 44L23.4 27.6L7 24L23.4 20.4Z" stroke="#8a6f3f" stroke-width="1"/>
+    </svg>
+    <h1 class="welcome-title">Doğru uzman.<br><em>Tam zamanında.</em></h1>
+    <p class="welcome-sub">Tıp, hukuk, finans ve teknoloji alanlarında doğrulanmış uzmanlarla bire bir görüşme.</p>
+    <div class="welcome-actions">
+      <button class="btn btn-gold btn-full" onclick="go('s-login')">Giriş Yap</button>
+      <button class="btn btn-full" style="border-color:rgba(255,255,255,.15);color:rgba(240,236,228,.7)" onclick="go('s-signup')">Hesap Oluştur</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Login -->
+<div class="screen" id="s-login">
+  <div class="safe-top"></div>
+  <div class="top-bar">
+    <button class="top-bar-btn" onclick="back()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
+    <span class="top-bar-title">Giriş Yap</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="scroll">
+    <div class="auth-wrap">
+      <h2 class="auth-title">Hoş geldiniz.</h2>
+      <p class="auth-sub">Hesabınıza giriş yapın.</p>
+      <div class="role-tabs">
+        <button class="role-tab active" id="rt-client" onclick="setLoginRole('client')">Danışan</button>
+        <button class="role-tab" id="rt-expert" onclick="setLoginRole('expert')">Uzman</button>
+        <button class="role-tab" id="rt-corp" onclick="setLoginRole('corp')">Kurumsal</button>
+        <button class="role-tab" id="rt-black" style="color:#c9a84c" onclick="setLoginRole('black')">✦ Black</button>
+      </div>
+      <p class="err-msg" id="login-err"></p>
+      <div class="field">
+        <label>Telefon Numarası</label>
+        <input type="tel" id="login-phone" placeholder="0555 555 55 55" autocomplete="tel">
+      </div>
+      <div class="field">
+        <label>Şifre</label>
+        <input type="password" id="login-pass" placeholder="••••••" autocomplete="current-password">
+      </div>
+      <button class="btn btn-dark btn-full" id="login-btn" onclick="doLogin()">Giriş Yap</button>
+      <div class="auth-switch">Hesabın yok mu? <span onclick="go('s-signup')">Kayıt Ol →</span></div>
+      <div style="margin-top:20px;padding:12px;background:var(--surf);border-radius:10px;font-size:12px;color:var(--ink2);line-height:1.8">
+        <strong style="color:var(--ink)">Demo:</strong><br>
+        Telefon: 0555 555 55 55 · Şifre: 123456
+      </div>
+    </div>
+    <div class="safe-bot"></div>
+  </div>
+</div>
+
+<!-- 3. Signup -->
+<div class="screen" id="s-signup">
+  <div class="safe-top"></div>
+  <div class="top-bar">
+    <button class="top-bar-btn" onclick="back()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
+    <span class="top-bar-title">Kayıt Ol</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="scroll">
+    <div class="auth-wrap">
+      <h2 class="auth-title">Hesap oluştur.</h2>
+      <p class="auth-sub">Saniyeler içinde başlayın.</p>
+      <p class="err-msg" id="signup-err"></p>
+      <div class="field"><label>Ad Soyad</label><input type="text" id="su-name" placeholder="Adınız Soyadınız"></div>
+      <div class="field"><label>Telefon</label><input type="tel" id="su-phone" placeholder="0555 555 55 55"></div>
+      <div class="field"><label>E-posta (isteğe bağlı)</label><input type="email" id="su-email" placeholder="ornek@email.com"></div>
+      <div class="field"><label>Şifre</label><input type="password" id="su-pass" placeholder="En az 6 karakter"></div>
+      <div class="field"><label>Şifre Tekrar</label><input type="password" id="su-pass2" placeholder="Tekrar girin"></div>
+      <button class="btn btn-dark btn-full" onclick="doSignup()">Kayıt Ol</button>
+      <div class="auth-switch">Zaten hesabın var mı? <span onclick="go('s-login')">Giriş Yap ←</span></div>
+    </div>
+    <div class="safe-bot"></div>
+  </div>
+</div>
+
+<!-- 4. Main (with bottom tabs) -->
+<div class="screen" id="s-main">
+  <div class="safe-top"></div>
+  <!-- Top bar -->
+  <div class="top-bar" id="main-topbar">
+    <div class="top-bar-logo">
+      <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M9 1L10.4 6.8L16.5 9L10.4 11.2L9 17L7.6 11.2L1.5 9L7.6 6.8Z" fill="#8a6f3f"/></svg>
+      Lonca
+    </div>
+    <div style="flex:1"></div>
+    <button class="top-bar-btn" style="position:relative" onclick="openSheet('notif-sheet')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="notif-dot" id="notif-dot" style="display:none"></span>
+    </button>
+    <button class="top-bar-btn" onclick="openSheet('dm-sheet')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </button>
+  </div>
+
+  <!-- Tab content -->
+  <div style="flex:1;overflow:hidden;position:relative">
+    <!-- Home tab -->
+    <div id="tab-home" class="scroll" style="height:100%;display:block">
+      <div id="home-content"></div>
+    </div>
+    <!-- Experts tab -->
+    <div id="tab-experts" class="scroll" style="height:100%;display:none">
+      <div class="search-wrap">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" id="expert-search" placeholder="İsim veya alan ara…" oninput="filterExperts(this.value)">
+        </div>
+      </div>
+      <div id="experts-list" class="pad"></div>
+    </div>
+    <!-- Match tab -->
+    <div id="tab-match" class="scroll" style="height:100%;display:none">
+      <div id="match-content" class="pad"></div>
+    </div>
+    <!-- Appointments tab -->
+    <div id="tab-appts" class="scroll" style="height:100%;display:none">
+      <div id="appts-content" class="pad"></div>
+    </div>
+    <!-- Profile tab -->
+    <div id="tab-profile" class="scroll" style="height:100%;display:none">
+      <div id="profile-content"></div>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <div class="bottom-nav">
+    <button class="nav-tab active" id="nav-home" onclick="switchTab('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Ana Sayfa</span>
+    </button>
+    <button class="nav-tab" id="nav-experts" onclick="switchTab('experts')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Uzmanlar</span>
+    </button>
+    <button class="nav-tab" id="nav-match" onclick="switchTab('match')" style="position:relative">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"/></svg>
+      <span>Eşleşme</span>
+    </button>
+    <button class="nav-tab" id="nav-appts" onclick="switchTab('appts')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Randevular</span>
+    </button>
+    <button class="nav-tab" id="nav-profile" onclick="switchTab('profile')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profil</span>
+    </button>
+  </div>
+  <div class="safe-bot"></div>
+</div>
+
+<!-- 5. Session screen -->
+<div class="screen" id="s-session">
+  <div class="top-bar" style="background:#0a0908;border-color:rgba(255,255,255,.08)">
+    <div style="flex:1;display:flex;align-items:center;gap:10px">
+      <div class="avatar" id="sess-init" style="width:32px;height:32px;font-size:12px;background:#1a1917;color:#c4a06a;font-weight:400;border:1px solid rgba(196,160,106,.3)">MB</div>
+      <div>
+        <div id="sess-name" style="font-size:13px;color:#f0ece4;font-weight:400">Prof. Dr. Mustafa Boz</div>
+        <div id="sess-field" style="font-size:11px;color:rgba(240,236,228,.5)">Nöroşirürji</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end">
+      <div id="sess-timer" style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:200;color:#f0ece4">00:00</div>
+      <div style="font-size:9px;color:#c0392b;letter-spacing:.1em;text-transform:uppercase">● Canlı</div>
+    </div>
+  </div>
+  <div class="session-bg">
+    <div class="session-video">
+      <div style="text-align:center">
+        <div class="avatar" id="sess-expert-avatar" style="width:90px;height:90px;font-size:1.6rem;background:#1a1917;color:#c4a06a;border:1px solid rgba(196,160,106,.2);margin:0 auto 12px;font-weight:300">MB</div>
+        <div style="font-family:'Fraunces',serif;font-size:1rem;font-weight:200;color:rgba(240,236,228,.7)">Bağlantı kuruldu</div>
+      </div>
+      <div class="session-self">
+        <div style="width:100%;height:100%;background:#222;display:flex;align-items:center;justify-content:center;font-size:10px;color:#666">Kamera</div>
+      </div>
+    </div>
+    <div class="session-controls">
+      <button class="ctrl-btn normal" id="mic-btn" onclick="toggleMic()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 0 1 3 3v8a3 3 0 0 1-6 0V4a3 3 0 0 1 3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
+      </button>
+      <button class="ctrl-btn end-call" onclick="endSession()" style="width:64px;height:64px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07C9.44 17.25 7.76 15.57 6.06 13.32a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.99 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.97 9.91"/><line x1="23" y1="1" x2="1" y2="23"/></svg>
+      </button>
+      <button class="ctrl-btn normal" id="cam-btn" onclick="toggleCam()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ SHEETS ════════ -->
+
+<!-- Expert detail sheet -->
+<div class="sheet-overlay" id="expert-sheet-overlay" onclick="closeSheet('expert-sheet-overlay')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-body" id="expert-sheet-body"></div>
+  </div>
+</div>
+
+<!-- Booking confirm sheet -->
+<div class="sheet-overlay" id="booking-sheet-overlay" onclick="closeSheet('booking-sheet-overlay')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h3>Randevu Onayla</h3>
+      <button class="sheet-close" onclick="closeSheet('booking-sheet-overlay')">✕</button>
+    </div>
+    <div class="sheet-body" id="booking-sheet-body"></div>
+  </div>
+</div>
+
+<!-- Notifications sheet -->
+<div class="sheet-overlay" id="notif-sheet-overlay" onclick="closeSheet('notif-sheet-overlay')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h3>Bildirimler</h3>
+      <button class="sheet-close" onclick="closeSheet('notif-sheet-overlay')">✕</button>
+    </div>
+    <div class="sheet-body" id="notif-sheet-body">
+      <div style="text-align:center;padding:32px 0;color:var(--ink3);font-size:13px">Bildirim yok</div>
+    </div>
+  </div>
+</div>
+
+<!-- Dark mode sheet -->
+<div class="sheet-overlay" id="dm-sheet-overlay" onclick="closeSheet('dm-sheet-overlay')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h3>Görünüm</h3><button class="sheet-close" onclick="closeSheet('dm-sheet-overlay')">✕</button></div>
+    <div class="sheet-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-size:14px;color:var(--ink)">Karanlık Mod</div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:2px">Göz yorgunluğunu azaltır</div>
+        </div>
+        <div class="dm-toggle" id="dm-toggle-btn" onclick="toggleDM()"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ════════ JS ════════ -->
+<script>
+
+// ── Navigation stack ───────────────────────────────────────
+const screenStack = [];
+
+function go(id){
+  const prev = document.querySelector('.screen.active');
+  if(prev){ prev.classList.remove('active'); }
+  const next = document.getElementById(id);
+  if(next){
+    next.classList.add('active','slide-in');
+    next.addEventListener('animationend', ()=>next.classList.remove('slide-in'), {once:true});
+    if(id !== 's-welcome') screenStack.push(id);
+  }
+  if(id === 's-main') renderMain();
+}
+
+function back(){
+  screenStack.pop();
+  const prev = screenStack[screenStack.length-1] || 's-welcome';
+  document.querySelector('.screen.active')?.classList.remove('active');
+  const s = document.getElementById(prev);
+  if(s) s.classList.add('active');
+}
+
+// ── Dark mode ──────────────────────────────────────────────
+try{ if(localStorage.getItem('lonca-dm')==='1') document.documentElement.classList.add('dm'); }catch(e){}
+function toggleDM(){
+  const on = document.documentElement.classList.toggle('dm');
+  try{ localStorage.setItem('lonca-dm', on?'1':'0'); }catch(e){}
+  const btn = document.getElementById('dm-toggle-btn');
+  if(btn) btn.classList.toggle('on', on);
+}
+// Sync toggle state
+document.addEventListener('DOMContentLoaded',()=>{
+  const btn = document.getElementById('dm-toggle-btn');
+  if(btn) btn.classList.toggle('on', document.documentElement.classList.contains('dm'));
+});
+
+// ── Auth ───────────────────────────────────────────────────
+function setLoginRole(role){
+  loginRole = role;
+  document.querySelectorAll('.role-tab').forEach(t=>{
+    t.classList.toggle('active', t.id === 'rt-'+role);
+  });
+}
+
+function doLogin(){
+  const phone = document.getElementById('login-phone').value.replace(/\s/g,'');
+  const pass  = document.getElementById('login-pass').value;
+  const err   = document.getElementById('login-err');
+  err.style.display='none';
+  const btn   = document.getElementById('login-btn');
+
+  if(!phone||!pass){ err.textContent='Telefon ve şifre gerekli.'; err.style.display='block'; return; }
+
+  const target = USERS[loginRole];
+  if(!target){ err.textContent='Bu rol için kayıtlı kullanıcı yok.'; err.style.display='block'; return; }
+
+  if(phone === target.phone.replace(/\s/g,'') && pass === target.pass){
+    currentUser = {...target};
+    localStorage.setItem('lonca_app_me', JSON.stringify(currentUser));
+    btn.textContent = 'Giriş yapılıyor…';
+    setTimeout(()=>{ btn.textContent='Giriş Yap'; go('s-main'); }, 400);
+  } else {
+    err.textContent = 'Telefon numarası veya şifre hatalı.';
+    err.style.display = 'block';
+  }
+}
+
+function doSignup(){
+  const name  = document.getElementById('su-name').value.trim();
+  const phone = document.getElementById('su-phone').value.replace(/\s/g,'');
+  const pass  = document.getElementById('su-pass').value;
+  const pass2 = document.getElementById('su-pass2').value;
+  const err   = document.getElementById('signup-err');
+  err.style.display='none';
+
+  if(!name || name.split(' ').length < 2){ err.textContent='Ad ve soyadınızı girin.'; err.style.display='block'; return; }
+  if(phone.length < 10){ err.textContent='Geçerli telefon girin.'; err.style.display='block'; return; }
+  if(pass.length < 6){ err.textContent='Şifre en az 6 karakter.'; err.style.display='block'; return; }
+  if(pass !== pass2){ err.textContent='Şifreler eşleşmiyor.'; err.style.display='block'; return; }
+
+  const parts = name.split(' ');
+  const initials = (parts[0][0] + (parts[parts.length-1][0]||'')).toUpperCase();
+  currentUser = {name, phone, pass, initials, role:'client'};
+  localStorage.setItem('lonca_app_me', JSON.stringify(currentUser));
+
+  showToast('Hoş geldiniz, ' + parts[0] + '! ✦', 'gold');
+  go('s-main');
+}
+
+function logout(){
+  currentUser = null;
+  localStorage.removeItem('lonca_app_me');
+  document.querySelector('.screen.active')?.classList.remove('active');
+  document.getElementById('s-welcome').classList.add('active');
+  screenStack.length = 0;
+}
+
+// ── Sheet ──────────────────────────────────────────────────
+function openSheet(id){
+  document.getElementById(id+'-overlay'||id).classList.add('open');
+}
+function closeSheet(id){
+  document.getElementById(id).classList.remove('open');
+}
+
+// ── Main app render ────────────────────────────────────────
+let activeTab = 'home';
+
+function renderMain(){
+  switchTab('home');
+  // Show notif dot if appointments upcoming
+  const dot = document.getElementById('notif-dot');
+  if(dot) dot.style.display = APPOINTMENTS.some(a=>a.status==='upcoming') ? 'block' : 'none';
+}
+
+function switchTab(tab){
+  activeTab = tab;
+  ['home','experts','match','appts','profile'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display = t===tab ? 'block' : 'none';
+    document.getElementById('nav-'+t).classList.toggle('active', t===tab);
+  });
+  if(tab==='home')    renderHome();
+  if(tab==='experts') renderExperts();
+  if(tab==='match')   renderMatch();
+  if(tab==='appts')   renderAppts();
+  if(tab==='profile') renderProfile();
+}
+
+// ── HOME ───────────────────────────────────────────────────
+function renderHome(){
+  const name   = currentUser?.name?.split(' ')[0] || 'Hoş geldiniz';
+  const upcoming = APPOINTMENTS.filter(a=>a.status==='upcoming');
+  const h = document.getElementById('home-content');
+
+  let nextAppt = '';
+  if(upcoming.length){
+    const a = upcoming[0];
+    nextAppt = `
+    <div style="padding:0 16px 0">
+      <div class="ai-banner" onclick="switchTab('appts')">
+        <div class="ai-banner-tag">✦ Yaklaşan Seans</div>
+        <div class="ai-banner-title">${a.expert}</div>
+        <div class="ai-banner-body">${a.date} · ${a.time} · ${a.price}</div>
+        <button class="ai-banner-action">Randevuya Git →</button>
+      </div>
+    </div>`;
+  } else {
+    nextAppt = `
+    <div style="padding:0 16px 0">
+      <div class="ai-banner" onclick="switchTab('match')">
+        <div class="ai-banner-tag">✦ AI Eşleştirme</div>
+        <div class="ai-banner-title">Doğru uzmanı bul.</div>
+        <div class="ai-banner-body">Probleminizi yazın, NLP motorumuz en uygun uzmanı anında eşleştirsin.</div>
+        <button class="ai-banner-action">Eşleştirme Başlat →</button>
+      </div>
+    </div>`;
+  }
+
+  h.innerHTML = `
+  <div style="padding:20px 16px 8px;animation:fadeIn .3s both">
+    <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px">Merhaba,</div>
+    <div style="font-family:'Fraunces',serif;font-size:1.6rem;font-weight:200;color:var(--ink)">${name}.</div>
+  </div>
+  ${nextAppt}
+  <div class="kpi-row" style="animation:fadeIn .35s .05s both">
+    <div class="kpi">
+      <div class="kpi-label">Toplam Seans</div>
+      <div class="kpi-value">${APPOINTMENTS.length}</div>
+      <div class="kpi-desc">Tüm zamanlar</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Yaklaşan</div>
+      <div class="kpi-value">${upcoming.length}</div>
+      <div class="kpi-desc">Randevu</div>
+    </div>
+  </div>
+  <div class="sec-head">
+    <h3>Öne Çıkan Uzmanlar</h3>
+    <button class="sec-head-action" onclick="switchTab('experts')">Tümü →</button>
+  </div>
+  <div style="padding:0 16px;animation:fadeIn .4s .1s both">
+    ${EXPERTS.slice(0,3).map(e => expertCardHTML(e, true)).join('')}
+  </div>
+  <div style="height:16px"></div>`;
+}
+
+// ── EXPERTS ────────────────────────────────────────────────
+function renderExperts(query){
+  const list = document.getElementById('experts-list');
+  const q    = (query||'').toLowerCase().trim();
+  const data = q
+    ? EXPERTS.filter(e=>e.name.toLowerCase().includes(q)||e.field.toLowerCase().includes(q)||(e.bio||'').toLowerCase().includes(q))
+    : EXPERTS;
+  list.innerHTML = data.length
+    ? data.map(e=>expertCardHTML(e)).join('')
+    : '<div style="text-align:center;padding:40px 0;color:var(--ink3);font-size:14px">Sonuç bulunamadı.</div>';
+}
+function filterExperts(q){ renderExperts(q); }
+
+function expertCardHTML(e, compact){
+  return `<div class="expert-card" onclick="openExpertSheet('${e.name}')">
+    <div class="expert-tag">${e.field}</div>
+    <div class="expert-name">${e.name}</div>
+    <div class="expert-verified">
+      <svg width="10" height="10" viewBox="0 0 8 8" fill="var(--gold)"><path d="M4 0L5 3L8 4L5 5L4 8L3 5L0 4L3 3Z"/></svg>
+      Doğrulanmış · ${e.rating} ★ · ${e.sessions} seans
+    </div>
+    ${!compact ? `<p class="expert-bio">${e.bio}</p>` : ''}
+    <div class="expert-footer">
+      <div>
+        <div class="expert-slot">${e.time}</div>
+        <div class="expert-price">${e.price}</div>
+      </div>
+      <button class="btn btn-dark btn-sm" onclick="event.stopPropagation();bookingSheet('${e.name}')">
+        Randevu Al
+      </button>
+    </div>
+  </div>`;
+}
+
+function openExpertSheet(name){
+  const e = EXPERTS.find(ex=>ex.name===name);
+  if(!e) return;
+  const slotsHTML = e.slots.map(s=>`
+    <div class="slot-btn ${s.booked?'booked':''}" onclick="${s.booked?'':'"bookingSheet(\''+name+'\')"'}">
+      <div class="slot-day">${s.day}</div>
+      <div class="slot-time">${s.time}</div>
+      ${s.booked ? '<div style="font-size:10px;color:var(--err);margin-top:2px">Dolu</div>' : ''}
+    </div>`).join('');
+
+  document.getElementById('expert-sheet-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:20px">
+      <div class="avatar ep-avatar">${e.initials}</div>
+      <div class="ep-name">${e.name}</div>
+      <div class="ep-field">${e.field}</div>
+      <div style="display:flex;gap:12px;margin-top:10px">
+        <span class="badge badge-gold">${e.rating} ★</span>
+        <span class="badge badge-grey">${e.sessions} Seans</span>
+        <span class="badge badge-grey">${e.price} / 30dk</span>
+      </div>
+    </div>
+    <div class="ep-bio">${e.bio}</div>
+    <div style="margin-top:16px">
+      <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px">Müsait Slotlar</div>
+      <div class="slot-grid">${slotsHTML}</div>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:8px">
+      <button class="btn btn-dark" style="flex:1;height:46px" onclick="closeSheet('expert-sheet-overlay');bookingSheet('${e.name}')">Randevu Al</button>
+      <button class="btn btn-round" onclick="openVoice('${e.name}')">🎤</button>
+    </div>`;
+  openSheet('expert-sheet');
+}
+
+// ── BOOKING ────────────────────────────────────────────────
+function bookingSheet(name){
+  _selectedExpert = EXPERTS.find(e=>e.name===name);
+  if(!_selectedExpert) return;
+  closeSheet('expert-sheet-overlay');
+  const e = _selectedExpert;
+  const freeSlot = e.slots.find(s=>!s.booked) || e.slots[0];
+
+  document.getElementById('booking-sheet-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:14px;background:var(--surf);border-radius:12px">
+      <div class="avatar" style="width:44px;height:44px;font-size:16px">${e.initials}</div>
+      <div>
+        <div style="font-weight:400;color:var(--ink)">${e.name}</div>
+        <div style="font-size:12px;color:var(--ink3);margin-top:2px">${e.field}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+      <div style="padding:12px;background:var(--surf);border-radius:10px;text-align:center">
+        <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px">Seans Tarihi</div>
+        <div style="font-size:13px;color:var(--ink)">${freeSlot.day} · ${freeSlot.time}</div>
+      </div>
+      <div style="padding:12px;background:var(--surf);border-radius:10px;text-align:center">
+        <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px">Ücret</div>
+        <div style="font-family:'Fraunces',serif;font-size:1rem;color:var(--gold)">${e.price}</div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:var(--ink2);line-height:1.7;margin-bottom:20px;padding:12px;border-left:2px solid var(--gold);background:var(--gold-bg);border-radius:0 8px 8px 0">
+      Ödeme seans başlamadan önce alınır. İptal için 24 saat öncesine kadar süreniz var.
+    </div>
+    <button class="btn btn-dark btn-full" onclick="confirmBooking()">Onayla ve Öde</button>`;
+  openSheet('booking-sheet');
+}
+
+function confirmBooking(){
+  if(!_selectedExpert) return;
+  const e = _selectedExpert;
+  const freeSlot = e.slots.find(s=>!s.booked);
+  if(freeSlot) freeSlot.booked = true;
+
+  const today = new Date().toLocaleDateString('tr-TR',{day:'numeric',month:'short',year:'numeric'});
+  APPOINTMENTS.unshift({
+    expert:e.name, field:e.field, initials:e.initials,
+    date:today, time:freeSlot?.time||e.time, price:e.price, status:'upcoming'
+  });
+  try{ localStorage.setItem('lonca_app_appts', JSON.stringify(APPOINTMENTS)); }catch(er){}
+
+  closeSheet('booking-sheet-overlay');
+  showToast('Randevunuz onaylandı ✦', 'gold');
+
+  const dot = document.getElementById('notif-dot');
+  if(dot) dot.style.display = 'block';
+
+  // Ask to start session after delay
+  setTimeout(()=>{
+    if(confirm(e.name + ' ile seansı şimdi başlatmak ister misiniz?')){
+      startSession(e.name, e.field, e.initials);
+    }
+  }, 800);
+}
+
+// ── MATCH ──────────────────────────────────────────────────
+function renderMatch(){
+  document.getElementById('match-content').innerHTML = `
+  <div class="wizard-step">
+    <div class="wizard-chip">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"/></svg>
+      AI Eşleştirme
+    </div>
+    <div style="font-family:'Fraunces',serif;font-size:1.6rem;font-weight:200;color:var(--ink);margin-bottom:6px">
+      Kuzey Yıldızı<br><em style="color:var(--gold)">Eşleştirmesi.</em>
+    </div>
+    <p style="font-size:13px;color:var(--ink2);line-height:1.7;margin-bottom:20px">
+      Probleminizi düz dille yazın. NLP motorumuz doğru uzmanı anında bulur.
+    </p>
+    <div class="field">
+      <textarea id="match-input" style="min-height:120px;font-size:15px" placeholder="Örn: Şirketimi İngiltere'ye taşımak istiyorum, hukuki süreçleri anlamak istiyorum…"></textarea>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px">
+      ${['🚨 Acil hukuki kriz','💼 Yurt dışı şirket kurulumu','📈 Portföy analizi','🧠 Tıbbi görüş'].map(t=>`
+        <button onclick="document.getElementById('match-input').value='${t.replace(/['"]/g,'')}';" style="padding:7px 12px;border:1px solid var(--border);border-radius:20px;font-size:11px;background:var(--surf);color:var(--ink2);cursor:pointer;font-family:'Geist',sans-serif">
+          ${t}
+        </button>`).join('')}
+    </div>
+    <button class="btn btn-dark btn-full" onclick="runMatch()">Eşleştir →</button>
+  </div>`;
+}
+
+function runMatch(){
+  const q = document.getElementById('match-input')?.value?.trim();
+  if(!q){ showToast('Lütfen önce probleminizi yazın.'); return; }
+
+  const content = document.getElementById('match-content');
+  content.innerHTML = `<div style="text-align:center;padding:40px 0">
+    <div class="thinking-dots"><span></span><span></span><span></span></div>
+    <div style="font-size:13px;color:var(--ink2);margin-top:12px">Analiz ediliyor…</div>
+  </div>`;
+
+  setTimeout(()=>{
+    const matches = nlpMatch(q);
+    content.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+      <button onclick="renderMatch()" style="background:none;border:none;color:var(--gold);font-family:'Geist',sans-serif;font-size:12px;cursor:pointer;letter-spacing:.06em">← Yeni Arama</button>
+    </div>
+    ${matches.map((m,i)=>`
+    <div class="match-card">
+      <div class="match-ribbon ${['mr-best','mr-strong','mr-good'][i]||'mr-good'}">${['En İyi Eşleşme','Güçlü Eşleşme','İyi Eşleşme'][i]||'Eşleşme'}</div>
+      <div class="expert-tag">${m.field}</div>
+      <div style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:200;color:var(--ink);margin-bottom:4px">${m.name}</div>
+      <div class="match-pct">${m.pct}%</div>
+      <div class="match-why">${m.why}</div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-dark btn-sm" onclick="bookingSheet('${m.name}')">Randevu Al</button>
+        <button class="btn btn-sm" onclick="openExpertSheet('${m.name}')">Profil</button>
+      </div>
+    </div>`).join('')}`;
+  }, 2000);
+}
+
+function nlpMatch(query){
+  const q = query.toLowerCase();
+  const stopwords = new Set(['ve','ile','bir','bu','için','gibi','the','and','with','that','want','need']);
+  const tokens = q.split(/\W+/).filter(w=>w.length>1&&!stopwords.has(w));
+
+  return EXPERTS.map(e=>{
+    const text = (e.field+' '+e.bio).toLowerCase();
+    let score = tokens.filter(t=>text.includes(t)).length;
+    const pct = Math.min(98, Math.round(55 + score * 18 + Math.random()*6));
+    const matched = tokens.filter(t=>text.includes(t)).slice(0,2);
+    const why = matched.length
+      ? '"'+matched.join(', ')+'" alanında güçlü uyum saptandı.'
+      : 'Genel uzmanlık profili uyumlu.';
+    return {...e, pct, why, _score:score};
+  }).sort((a,b)=>b._score-a._score||b.pct-a.pct).slice(0,3);
+}
+
+// ── APPOINTMENTS ───────────────────────────────────────────
+function renderAppts(){
+  const upcoming  = APPOINTMENTS.filter(a=>a.status==='upcoming');
+  const completed = APPOINTMENTS.filter(a=>a.status==='completed');
+  const c = document.getElementById('appts-content');
+
+  const card = (a, type) => `
+  <div class="appt-card">
+    <div class="appt-header">
+      <div class="avatar" style="width:38px;height:38px;font-size:13px">${a.initials}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:400;color:var(--ink)">${a.expert}</div>
+        <div class="appt-meta">${a.field}</div>
+      </div>
+      <span class="badge ${type==='upcoming'?'badge-green':'badge-grey'}">${type==='upcoming'?'Yaklaşan':'Tamamlandı'}</span>
+    </div>
+    <div class="appt-row">
+      <span style="color:var(--ink2)">${a.date} · ${a.time}</span>
+      <span style="font-family:'Fraunces',serif;color:var(--gold)">${a.price}</span>
+    </div>
+    ${type==='upcoming' ? `
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-dark btn-sm" style="flex:1" onclick="startSession('${a.expert}','${a.field}','${a.initials}')">▶ Başlat</button>
+      <button class="btn btn-sm" onclick="cancelAppt('${a.expert}','${a.date}')">İptal</button>
+    </div>` : `
+    <button class="btn btn-sm" onclick="showToast('Değerlendirme yakında ✦')">⭐ Değerlendir</button>`}
+  </div>`;
+
+  c.innerHTML = `
+  ${upcoming.length ? `
+  <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;padding-top:4px">Yaklaşan</div>
+  ${upcoming.map(a=>card(a,'upcoming')).join('')}` : ''}
+  ${completed.length ? `
+  <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);margin:16px 0 8px">Tamamlanan</div>
+  ${completed.map(a=>card(a,'completed')).join('')}` : ''}
+  ${!APPOINTMENTS.length ? `
+  <div style="text-align:center;padding:60px 0">
+    <div style="font-size:32px;margin-bottom:12px">📅</div>
+    <div style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:200;color:var(--ink);margin-bottom:6px">Randevunuz yok</div>
+    <div style="font-size:13px;color:var(--ink3);margin-bottom:20px">Bir uzmanla ilk seansınızı planlayın.</div>
+    <button class="btn btn-dark" onclick="switchTab('experts')">Uzmanlara Bak</button>
+  </div>` : ''}`;
+}
+
+function cancelAppt(expert, date){
+  const idx = APPOINTMENTS.findIndex(a=>a.expert===expert&&a.date===date);
+  if(idx>=0){ APPOINTMENTS[idx].status='cancelled'; APPOINTMENTS.splice(idx,1); }
+  try{ localStorage.setItem('lonca_app_appts', JSON.stringify(APPOINTMENTS)); }catch(e){}
+  showToast('Randevu iptal edildi.');
+  renderAppts();
+}
+
+// ── PROFILE ────────────────────────────────────────────────
+function renderProfile(){
+  const u = currentUser || {};
+  document.getElementById('profile-content').innerHTML = `
+  <div class="profile-header">
+    <div class="avatar" style="width:72px;height:72px;font-size:1.4rem;margin:0 auto;font-weight:300">${u.initials||'?'}</div>
+    <div class="profile-name">${u.name||'—'}</div>
+    <div class="profile-role">${u.role==='expert'?'Uzman':'Danışan'}</div>
+  </div>
+  <div style="margin:0 16px;margin-bottom:20px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:12px">
+    <div style="display:flex;justify-content:space-around;text-align:center">
+      <div><div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:200;color:var(--ink)">${APPOINTMENTS.length}</div><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-top:2px">Seans</div></div>
+      <div style="border-left:1px solid var(--border)"></div>
+      <div><div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:200;color:var(--ink)">${APPOINTMENTS.filter(a=>a.status==='upcoming').length}</div><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-top:2px">Yaklaşan</div></div>
+      <div style="border-left:1px solid var(--border)"></div>
+      <div><div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:200;color:var(--ink)">${EXPERTS.filter(e=>e.rating>=4.8).length}</div><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-top:2px">Top Uzman</div></div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:1px">
+    <div class="setting-row" onclick="openProfileEdit()">
+      <div>
+        <div class="setting-label">Profil Düzenle</div>
+        <div class="setting-val">${u.name||'—'}</div>
+      </div>
+      <svg class="setting-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+    <div class="setting-row" onclick="openSheet('dm-sheet')">
+      <div class="setting-label">Görünüm</div>
+      <div class="dm-toggle" id="dm-toggle-prof" onclick="event.stopPropagation();toggleDM();this.classList.toggle('on')" style="pointer-events:auto"></div>
+    </div>
+    <div class="setting-row" onclick="showToast('Bildirim ayarları yakında.')">
+      <div class="setting-label">Bildirimler</div>
+      <svg class="setting-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+    <div class="setting-row" onclick="showToast('Gizlilik politikası.')">
+      <div class="setting-label">Gizlilik</div>
+      <svg class="setting-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+    <div class="setting-row" style="cursor:pointer" onclick="logout()">
+      <div class="setting-label" style="color:var(--err)">Çıkış Yap</div>
+    </div>
+  </div>
+  <div style="height:20px"></div>`;
+
+  // Sync DM toggle
+  const t = document.getElementById('dm-toggle-prof');
+  if(t) t.classList.toggle('on', document.documentElement.classList.contains('dm'));
+}
+
+function openProfileEdit(){
+  const u = currentUser||{};
+  const body = `
+  <h3 style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:200;margin-bottom:16px">Profil Düzenle</h3>
+  <div class="field"><label>Ad Soyad</label><input type="text" id="edit-name" value="${u.name||''}"></div>
+  <div class="field"><label>Telefon</label><input type="tel" id="edit-phone" value="${u.phone||''}"></div>
+  <button class="btn btn-dark btn-full" onclick="saveProfile()">Kaydet</button>`;
+
+  // Inline sheet using dynamic approach
+  document.getElementById('booking-sheet-body').innerHTML = body;
+  openSheet('booking-sheet');
+}
+
+function saveProfile(){
+  const name  = document.getElementById('edit-name')?.value?.trim();
+  const phone = document.getElementById('edit-phone')?.value?.trim();
+  if(!name){ showToast('Ad boş olamaz.'); return; }
+  currentUser.name = name;
+  if(phone) currentUser.phone = phone;
+  const parts = name.split(' ');
+  currentUser.initials = (parts[0][0]+(parts[parts.length-1][0]||'')).toUpperCase();
+  localStorage.setItem('lonca_app_me', JSON.stringify(currentUser));
+  closeSheet('booking-sheet-overlay');
+  showToast('Kaydedildi ✦', 'gold');
+  renderProfile();
+}
+
+// ── SESSION ────────────────────────────────────────────────
+function startSession(name, field, initials){
+  document.getElementById('sess-name').textContent   = name;
+  document.getElementById('sess-field').textContent  = field;
+  document.getElementById('sess-init').textContent   = initials;
+  document.getElementById('sess-expert-avatar').textContent = initials;
+  document.querySelector('.screen.active')?.classList.remove('active');
+  document.getElementById('s-session').classList.add('active','slide-up');
+  sessionSecs = 0;
+  clearInterval(sessionTimer);
+  sessionTimer = setInterval(()=>{
+    sessionSecs++;
+    const m = String(Math.floor(sessionSecs/60)).padStart(2,'0');
+    const s = String(sessionSecs%60).padStart(2,'0');
+    document.getElementById('sess-timer').textContent = m+':'+s;
+  }, 1000);
+}
+
+function endSession(){
+  clearInterval(sessionTimer);
+  // Mark first upcoming as completed
+  const idx = APPOINTMENTS.findIndex(a=>a.status==='upcoming');
+  if(idx>=0){ APPOINTMENTS[idx].status='completed'; }
+  try{ localStorage.setItem('lonca_app_appts', JSON.stringify(APPOINTMENTS)); }catch(e){}
+  document.getElementById('s-session').classList.remove('active','slide-up');
+  document.getElementById('s-main').classList.add('active');
+  showToast('Seans tamamlandı ✦', 'gold');
+  switchTab('appts');
+}
+
+let micOn=true, camOn=true;
+function toggleMic(){
+  micOn=!micOn;
+  document.getElementById('mic-btn').classList.toggle('muted',!micOn);
+  showToast(micOn?'Mikrofon açık':'Mikrofon kapalı');
+}
+function toggleCam(){
+  camOn=!camOn;
+  document.getElementById('cam-btn').classList.toggle('muted',!camOn);
+  showToast(camOn?'Kamera açık':'Kamera kapalı');
+}
+
+// ── Voice memo ─────────────────────────────────────────────
+function openVoice(name){
+  closeSheet('expert-sheet-overlay');
+  showToast('Sesli mesaj: '+name+' · Yakında');
+}
+
+// ── Toast ──────────────────────────────────────────────────
+let _toastTimer = null;
+function showToast(msg, type){
+  const t = document.getElementById('toast');
+  clearTimeout(_toastTimer);
+  t.textContent = msg;
+  t.className = 'show' + (type==='gold'?' gold':'');
+  _toastTimer = setTimeout(()=>{ t.classList.remove('show','gold'); }, 2600);
+}
+
+// ── Init ───────────────────────────────────────────────────
+(function init(){
+  if(currentUser){
+    document.getElementById('s-main').classList.add('active');
+    renderMain();
+  } else {
+    document.getElementById('s-welcome').classList.add('active');
+  }
+
+  // Swipe back gesture
+  let touchStartX=0, touchStartY=0;
+  document.addEventListener('touchstart', e=>{ touchStartX=e.touches[0].clientX; touchStartY=e.touches[0].clientY; }, {passive:true});
+  document.addEventListener('touchend', e=>{
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
+    if(dx>60 && dy<50 && touchStartX<40){
+      const active = document.querySelector('.screen.active');
+      if(active && active.id !== 's-welcome' && active.id !== 's-main' && active.id !== 's-session') back();
+    }
+  }, {passive:true});
+})();
+</script>
+</body>
+</html>
